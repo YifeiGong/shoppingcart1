@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import Products from './components/products';
-import { Button, Icon } from "antd";
+import { Button, Icon, Drawer } from "antd";
 import "antd/dist/antd.css";
 import Filter from './components/filter';
+import Basket from './components/basket';
 import Sizes from './components/checkbox';
 import './App.css';
 
@@ -11,6 +12,33 @@ class App extends Component {
     super();
     this.state = { products: [], filteredProducts: [] };
   }
+  state = { visible: false, childrenDrawer: false };
+
+  showDrawer = () => {
+    this.setState({
+      visible: true,
+    });
+  };
+
+  onClose = () => {
+    this.setState({
+      visible: false,
+    });
+  };
+
+  showChildrenDrawer = () => {
+    this.setState({
+      childrenDrawer: true,
+    });
+  };
+
+  onChildrenDrawerClose = () => {
+    this.setState({
+      childrenDrawer: false,
+    });
+  };
+
+  
   componentWillMount() {
 
     if (localStorage.getItem('cartItems')) {
@@ -25,6 +53,25 @@ class App extends Component {
       });
   }
 
+  handleAddToCart = (e, product) => {
+    this.setState(state => {
+      const cartItems = state.cartItems;
+      let productAlreadyInCart = false;
+
+      cartItems.forEach(cp => {
+        if (cp.id === product.id) {
+          cp.count += 1;
+          productAlreadyInCart = true;
+        }
+      });
+
+      if (!productAlreadyInCart) {
+        cartItems.push({ ...product, count: 1 });
+      }
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+      return { cartItems: cartItems };
+    });
+  }
 
   listProducts = () => {
     this.setState(state => {
@@ -58,6 +105,20 @@ class App extends Component {
         <div className="col-md-1 text-left">
         <br></br>
         
+        <Button type="primary" onClick={this.showDrawer}>
+          Open drawer
+        </Button>
+        <Drawer
+          title="Multi-level drawer"
+          width={520}
+          closable={false}
+          onClose={this.onClose}
+          visible={this.state.visible}
+        >
+          <Basket cartItems={this.state.cartItems} handleRemoveFromCart={this.handleRemoveFromCart} />
+         
+          
+        </Drawer>
         
         <Icon type="tags" theme="twoTone" style={{ fontSize: 50 }}/>
         <Sizes count={this.state.filteredProducts.length}  
@@ -79,6 +140,7 @@ class App extends Component {
       <Button></Button>
       <Icon type="shopping" theme="twoTone" style={{ fontSize: 50 }}/>
       <h5>Check Out</h5>
+      
       </div>
       </div>
     );
