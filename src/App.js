@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import Products from './components/products';
 import { Button, Icon } from "antd";
 import "antd/dist/antd.css";
-
+import Filter from './components/filter';
+import Sizes from './components/checkbox';
 import './App.css';
 
 class App extends Component {
@@ -25,39 +26,59 @@ class App extends Component {
   }
 
 
-
- 
-
   listProducts = () => {
     this.setState(state => {
+      if (state.sort !== '') {
+        state.products.sort((a, b) =>
+          (state.sort === 'lowestprice'
+            ? ((a.price > b.price) ? 1 : -1)
+            : ((a.price < b.price) ? 1 : -1)));
+      } else {
+        state.products.sort((a, b) => (a.id > b.id) ? 1 : -1);
+      }
+
       return { filteredProducts: state.products };
     })
   }
+  handleSortChange = (e) => {
+    this.setState({ sort: e.target.value });
+    this.listProducts();
+  }
+  handleSizeChange = (e) => {
+    this.setState({ size: e.target.value });
+    this.listProducts();
+  }
+
+ 
  
 
   render() {
     return (
       <div className="container">
-        <div className="col-md-1 text-center">
+        <div className="col-md-1 text-left">
         <br></br>
-        <Button type="dashed" shape="square" style={{ fontSize: 20 }} icon="tags">Sizes</Button>
         
+        
+        <Icon type="tags" theme="twoTone" style={{ fontSize: 50 }}/>
+        <Sizes count={this.state.filteredProducts.length}  
+        handleSizeChange={this.handleSizeChange} />
+       
         
 
         </div>
-        <div className="col-md-10">
-        <h1 className="text-center" >Shopping Cart</h1>
-  
+        <div className="col-md-10 text-center">
+        <h1 className="text-center" >1</h1>
+        <Filter handleSortChange={this.handleSortChange}/>
         
+
+        <Products products={this.state.filteredProducts} handleAddToCart={this.handleAddToCart} />
             
-           
-            <Products products={this.state.filteredProducts} handleAddToCart={this.handleAddToCart} />
-          
 
       </div>
       <div className="col-md-1">
-      <h5>Check Out</h5>
+      <Button></Button>
       <Icon type="shopping" theme="twoTone" style={{ fontSize: 50 }}/>
+      <h5>Check Out</h5>
       </div>
       </div>
     );

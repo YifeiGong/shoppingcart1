@@ -6,7 +6,7 @@ export default class Products extends Component {
 
     render() {
         const productItems = this.props.products.map(product => (
-            <div className="col-md-4 text-center">
+            <div className="col-md-4 text-center" key={product.sku}>
                 <Card hoverable title={product.title} style={{ height: 400 }} >
                      <a href={`#${product.sku}`}onClick={this.props.handleAddToCart}>
                         <img src={require(`../static/products/${product.sku}_2.jpg`)} alt={product.title} />
