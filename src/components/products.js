@@ -1,44 +1,28 @@
-import React, { useEffect, useState, Component } from 'react';
+import React, { Component } from 'react';
+import { Card, Button } from "antd";
+import "antd/dist/antd.css";
 
-const Products = () => {
-  const [data, setData] = useState({});
-  const products = Object.values(data);
-  useEffect(() => {
-    const fetchProducts = async () => {
-      const response = await fetch('./data/products.json');
-      const json = await response.json();
-      setData(json);
-    };
-    fetchProducts();
-  }, []);
+export default class Products extends Component {
 
-
-  
-  return (
-
-
-    <ul>
-      {products.map(product => 
-       <a href={`#${product.sku}`}>
-       <img src={require(`../static/products/${product.sku}_2.jpg`)} alt={product.title}/>
-       <span className="card-title" />
-        
-       <p className="card-title">{product.title}</p>
+    render() {
+        const productItems = this.props.products.map(product => (
+            <div className="col-md-4 text-center">
+                <Card hoverable title={product.title} style={{ height: 400 }} >
+                     <a href={`#${product.sku}`}onClick={this.props.handleAddToCart}>
+                        <img src={require(`../static/products/${product.sku}_2.jpg`)} alt={product.title} />
+                        <h5>{product.style}</h5>                        
+                    </a>
 						<p>Price: ${product.price}</p>
-            <btn
-							
-						>
-							Add to cart
-						</btn>
-   </a>       
-                    
+						
+                    <Button type="primary" onClick={() => this.props.handleAdd(product)}>Add to cart</Button>
+                    </Card>
+            </div>
+        ));
 
-       
-       )}
-    </ul>
-    
-    
-  );
-};
-
-export default Products
+        return (
+            <div className="row">
+                {productItems}
+            </div>
+        )
+    }
+}
