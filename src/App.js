@@ -1,150 +1,95 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import Products from './components/products';
 import { Button, Icon, Drawer } from "antd";
 import "antd/dist/antd.css";
 import Filter from './components/filter';
 import Basket from './components/basket';
-import Sizes from './components/checkbox';
 import './App.css';
+import firebase from 'firebase/app';
+import 'firebase/database';
 
-class App extends Component {
-  constructor() {
-    super();
-    this.state = { products: [], filteredProducts: [] };
-  }
-  state = { visible: false, childrenDrawer: false };
 
-  showDrawer = () => {
-    this.setState({
-      visible: true,
-    });
+const firebaseConfig = {
+  apiKey: "AIzaSyDgxBkbLBHoutLJZcT6G0iDEoRcp_YXxK0",
+  authDomain: "shoppingcart-fac8e.firebaseapp.com",
+  databaseURL: "https://shoppingcart-fac8e.firebaseio.com",
+  projectId: "shoppingcart-fac8e",
+  storageBucket: "",
+  messagingSenderId: "479899425927",
+  appId: "1:479899425927:web:d2bd65e9ba6aa2911a6c22"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database().ref();
+
+const App = () => {
+  const [data, setData] = useState({}); 
+  const [cartItems, setCartItems] = useState([]);
+  const products = Object.values(data);
+
+  const handleAddToCart = function (e,product,productSize){
+    let currentCartItems = [];
+      let itemAlreadyInCart = false;
+      cartItems.forEach(item =>{
+
+        // how to get the product.size 
+        if((item.product.sku === product.sku) && (item.size === productSize)){
+          itemAlreadyInCart = true; 
+          item.count++;
+        }
+        currentCartItems.push(item);
+      });
+      if (!itemAlreadyInCart){
+        currentCartItems.push({product,count:1,size:productSize});
+      }
+      // localStorage.setItem("cartItems",JSON.stringify(cartItems));
+      setCartItems(currentCartItems);
   };
 
-  onClose = () => {
-    this.setState({
-      visible: false,
-    });
-  };
-
-  showChildrenDrawer = () => {
-    this.setState({
-      childrenDrawer: true,
-    });
-  };
-
-  onChildrenDrawerClose = () => {
-    this.setState({
-      childrenDrawer: false,
-    });
+  const handleRemoveFromCart = function (e,product,productSize){
+    let currentCartItems = [];
+      cartItems.forEach(item =>{
+        if(item.product.sku !== product.sku || item.size != productSize) {
+          currentCartItems.push(item);
+        }
+      });
+      // localStorage.setItem("cartItems",JSON.stringify(cartItems));
+      setCartItems(currentCartItems);
   };
 
   
-  componentWillMount() {
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const response = await fetch('./data/products.json');
+      const json = await response.json();
+      setData(json);
+    };
+    fetchProducts();
+  }, []);
 
-    if (localStorage.getItem('cartItems')) {
-      this.setState({ cartItems: JSON.parse(localStorage.getItem('cartItems')) });
-    }
-
-    fetch('../public/products.json').then(res => res.json())
-      .catch(err => fetch('products.json').then(res => res.json()).then(data => data.products))
-      .then(data => {
-        this.setState({ products: data });
-        this.listProducts();
-      });
-  }
-
-  handleAddToCart = (e, product) => {
-    this.setState(state => {
-      const cartItems = state.cartItems;
-      let productAlreadyInCart = false;
-
-      cartItems.forEach(cp => {
-        if (cp.id === product.id) {
-          cp.count += 1;
-          productAlreadyInCart = true;
-        }
-      });
-
-      if (!productAlreadyInCart) {
-        cartItems.push({ ...product, count: 1 });
-      }
-      localStorage.setItem('cartItems', JSON.stringify(cartItems));
-      return { cartItems: cartItems };
-    });
-  }
-
-  listProducts = () => {
-    this.setState(state => {
-      if (state.sort !== '') {
-        state.products.sort((a, b) =>
-          (state.sort === 'lowestprice'
-            ? ((a.price > b.price) ? 1 : -1)
-            : ((a.price < b.price) ? 1 : -1)));
-      } else {
-        state.products.sort((a, b) => (a.id > b.id) ? 1 : -1);
-      }
-
-      return { filteredProducts: state.products };
-    })
-  }
-  handleSortChange = (e) => {
-    this.setState({ sort: e.target.value });
-    this.listProducts();
-  }
-  handleSizeChange = (e) => {
-    this.setState({ size: e.target.value });
-    this.listProducts();
-  }
-
- 
- 
-
-  render() {
     return (
       <div className="container">
-        <div className="col-md-1 text-left">
-        <br></br>
-        
-        <Button type="primary" onClick={this.showDrawer}>
-          Open drawer
-        </Button>
-        <Drawer
-          title="Multi-level drawer"
-          width={520}
-          closable={false}
-          onClose={this.onClose}
-          visible={this.state.visible}
-        >
-          <Basket cartItems={this.state.cartItems} handleRemoveFromCart={this.handleRemoveFromCart} />
-         
-          
-        </Drawer>
-        
+        <div className="col-md-8">
+   
+   <br></br>
         <Icon type="tags" theme="twoTone" style={{ fontSize: 50 }}/>
-        <Sizes count={this.state.filteredProducts.length}  
-        handleSizeChange={this.handleSizeChange} />
-       
+        <h5>Shopping List</h5>
+  
         
 
-        </div>
-        <div className="col-md-10 text-center">
-        <h1 className="text-center" >1</h1>
-        <Filter handleSortChange={this.handleSortChange}/>
-        
-
-        <Products products={this.state.filteredProducts} handleAddToCart={this.handleAddToCart} />
-            
+        <Products products = {products} handleAddToCartFunc =  {handleAddToCart}/>  
 
       </div>
-      <div className="col-md-1">
-      <Button></Button>
-      <Icon type="shopping" theme="twoTone" style={{ fontSize: 50 }}/>
+      <div className="col-md-4">
+      <br></br>
+      <Icon type="shopping" theme="twoTone" style={{ fontSize: 50 }}></Icon>
       <h5>Check Out</h5>
+      <Basket cartItems = {cartItems} handleRemoveFromCartFunc = {handleRemoveFromCart}/>
       
       </div>
       </div>
     );
   }
-}
+
 
 export default App;

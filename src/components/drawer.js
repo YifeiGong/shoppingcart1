@@ -1,7 +1,8 @@
 
 import React from 'react';
+import ReactDOM from 'react-dom';
 import 'antd/dist/antd.css';
-import { Drawer } from 'antd';
+import { Drawer, Button } from 'antd';
 import Basket from './components/basket';
 
 export default class Rightdrawer extends React.Component {
@@ -35,20 +36,10 @@ export default class Rightdrawer extends React.Component {
     return (
       <div>
         
-        <Drawer
-          title="Multi-level drawer"
-          width={520}
-          closable={false}
-          onClose={this.onClose}
-          visible={this.state.visible}
-        >
-          <Basket cartItems={this.state.cartItems} handleRemoveFromCart={this.handleRemoveFromCart} />
-         
-          
-        </Drawer>
       </div>
     );
   }
 }
+
 
           
