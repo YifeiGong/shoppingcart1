@@ -2,22 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Card, Button, Select } from "antd";
 import "antd/dist/antd.css";
 
+const Products = ({products,handleAddToCart}) =>{
+	const [productSize,setProductSize] = useState('');
 
-
-const Products = ({products, handleAddToCartFunc}) => (
-    <div>
-      {products.map(product => <Product key={product.sku} product={product} handleFunc={handleAddToCartFunc} />)}
-    </div>
-    );
-
-    const Product = ({product, handleFunc}) => {
-        const [Size, setSize] = useState("S");
-
-        const handleSizeChange = select_id => {
-          setSize(document.getElementById(select_id).value);
-        };
-        
-    return(
+	return(
+	products.map(product => 
        
         <div className = "col-md-4">
               <Card hoverable title={product.title} style={{ height: 450, marginTop:20 }} >
@@ -25,25 +14,23 @@ const Products = ({products, handleAddToCartFunc}) => (
         <img src= {`./data/products/${product.sku}_1.jpg`} alt = {product.title} style={{ height: 200 }} />
                         <h5>{product.style}</h5>                        
                     
-                      
-              <select style={{ marginTop:20 }} id={`${product.sku}-size-select`} onChange={()=>handleSizeChange(`${product.sku}-size-select`)}>
-              <option value='S'>S</option>
-              <option value='M'>M</option>
-              <option value='L'>L</option>
-              <option value='XL'>XL</option>
-              </select>
+          <Button size="small"  key='S' onClick = {()=> setProductSize('S')} disabled >S</Button>
+          <Button size="small"  key='M' onClick = {()=> setProductSize('M')} disabled={product.M === 0}>M</Button>
+          <Button size="small"  key='L' onClick = {()=> setProductSize('L')} disabled={product.L === 0}>L</Button>
+          <Button size="small"  key='XL' onClick = {()=> setProductSize('XL')} disabled={product.XL === 0}>XL</Button>   
+             
               <br></br>
               <b >{`$${product.price} `}</b>
               <br></br>
-              <Button type="primary" 
-              onClick = {(e) => handleFunc(e,product,Size)} >Add to Card</Button></div>
-            
-         
+              
+            <Button type="primary" onClick={(e)=> handleAddToCart(e,product,productSize)}> Add To Cart </Button>
+            </div>
        
         </Card>
         </div>   
         
-      )};
-    
-    
-    export default Products;
+        )
+        )
+      }
+      
+      export {Products}

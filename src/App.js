@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import Products from './components/products';
-import { Button, Icon, Drawer } from "antd";
+import {Products} from './components/products';
+import { Button, Icon, Drawer, Alert } from "antd";
 import "antd/dist/antd.css";
 import Filter from './components/filter';
 import Basket from './components/basket';
 import './App.css';
 import firebase from 'firebase/app';
 import 'firebase/database';
-
+import 'firebase/auth';
+import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDgxBkbLBHoutLJZcT6G0iDEoRcp_YXxK0",
@@ -22,40 +23,83 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database().ref();
 
+const uiConfig = {
+  signInFlow: 'popup',
+  signInOptions: [
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID
+  ],
+  callbacks: {
+    signInSuccessWithAuthResult: () => false
+  }
+};
+
+const SignIn = () => (
+  <StyledFirebaseAuth
+    uiConfig={uiConfig}
+    firebaseAuth={firebase.auth()}
+  />
+);
 const App = () => {
   const [data, setData] = useState({}); 
   const [cartItems, setCartItems] = useState([]);
   const products = Object.values(data);
+  const [user, setUser] = useState(null);
+
+  
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const response = await fetch('./data/products.json');
+      const json = await response.json();
+      const handleData = add_new =>{
+      	if(add_new.val()){
+      		let result = {}
+      		Object.keys(json).map(x=>{result[x] = Object.assign(json[x],add_new.val()[x])});
+      		setData(json);
+      	}
+      };
+      db.on('value',handleData,error=>alert(error));
+      return () => {db.off('value',handleData)};
+    };
+    fetchProducts();
+  }, []);
+
+    useEffect(() => {
+    firebase.auth().onAuthStateChanged(setUser);
+  }, []);
 
   const handleAddToCart = function (e,product,productSize){
-    let currentCartItems = [];
-      let itemAlreadyInCart = false;
-      cartItems.forEach(item =>{
-
-        // how to get the product.size 
-        if((item.product.sku === product.sku) && (item.size === productSize)){
-          itemAlreadyInCart = true; 
-          item.count++;
-        }
-        currentCartItems.push(item);
-      });
-      if (!itemAlreadyInCart){
-        currentCartItems.push({product,count:1,size:productSize});
+    if(!productSize){
+      alert('Please Select A Size');
+      return('Please Select A Size')
       }
-      // localStorage.setItem("cartItems",JSON.stringify(cartItems));
-      setCartItems(currentCartItems);
+    let InCart=false;
+    let cart=[];
+    cartItems.map(item=>{
+      if((item.product.sku===product.sku)&&(item.size===productSize)){
+        InCart = true;
+        item.count++;
+      }
+      cart.push(item)
+    });
+    if(!InCart){
+      cart.push({product,count:1,size:productSize});
+    }
+    setCartItems(cart);
   };
 
-  const handleRemoveFromCart = function (e,product,productSize){
-    let currentCartItems = [];
-      cartItems.forEach(item =>{
-        if(item.product.sku !== product.sku || item.size != productSize) {
-          currentCartItems.push(item);
-        }
-      });
-      // localStorage.setItem("cartItems",JSON.stringify(cartItems));
-      setCartItems(currentCartItems);
-  };
+  const handleRemoveFromCart = function(e,product,productSize){
+    let cart=[];
+    cartItems.map(item=>{
+      if((item.product.sku===product.sku)&&(item.size===productSize)){
+        item.count--;
+      }
+      if(item.count>0){
+     cart.push(item);
+      }
+    })
+    setCartItems(cart);
+  }
 
   
   useEffect(() => {
@@ -77,7 +121,7 @@ const App = () => {
   
         
 
-        <Products products = {products} handleAddToCartFunc =  {handleAddToCart}/>  
+        <Products products = {products} handleAddToCart={handleAddToCart}/>  
 
       </div>
       <div className="col-md-4">
@@ -85,7 +129,21 @@ const App = () => {
       <Icon type="shopping" theme="twoTone" style={{ fontSize: 50 }}></Icon>
       <h5>Check Out</h5>
       <Basket cartItems = {cartItems} handleRemoveFromCartFunc = {handleRemoveFromCart}/>
+      <React.Fragment>
+      {user ? <div>
+        <Alert
+      message="Welcome"
+      description= {user.displayName}
+      type="success"
+      showIcon
+    />
       
+      <Button primary onClick={() => firebase.auth().signOut()}>
+      	Log Out
+      </Button>
+      </div> : <SignIn/>}
+
+      </React.Fragment>
       </div>
       </div>
     );
